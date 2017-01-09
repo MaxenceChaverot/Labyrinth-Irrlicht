@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 2.6)
 PROJECT(Labyrinth-Irrlicht)
 
-SET(CMAKE_CXX_FLAGS_RELEASE "-O3")
-SET(CMAKE_CXX_FLAGS_DEBUG  "g")
-SET(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -g")
+SET(CMAKE_CXX_FLAGS_RELEASE "-O3 --std=gnu++11")
+SET(CMAKE_CXX_FLAGS_DEBUG  "g --std=gnu++11")
+SET(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -g --std=gnu++11")
 
 IF(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
 	SET(CMAKE_BUILD_TYPE RelWithDebInfo)
@@ -15,26 +15,17 @@ ELSE(CMAKE_CXX_FLAGS_DEBUG)
         SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/../)
 ENDIF(CMAKE_CXX_FLAGS_DEBUG)
 
-IF(BUILD_VM)
-        FIND_PACKAGE(X11)
-        FIND_PACKAGE(OpenGL)
-        SET(INCLUDE_DIRS ${X11_INCLUDE_DIR} ${OPENGL_INCLUDE_DIR})
-        SET(INCLUDE_LIBS ${X11_LIBRARIES} Xxf86vm ${OPENGL_LIBRARIES} "/usr/local/lib/libIrrlicht.a")
-ENDIF(BUILD_VM)
-
-IF(NOT BUILD_VM)
-        SET(INCLUDE_LIBS Irrlicht)
-ENDIF(NOT BUILD_VM)
-
+SET(INCLUDE_LIBS Irrlicht)
 
 INCLUDE_DIRECTORIES(
         "/usr/include/"
         "/usr/local/include/"
         "/usr/include/irrlicht"
+		"./include/"
 )
 
 FILE(GLOB SRCS src/*.cpp)
-#FILE(GLOB HDRS include/*.h)
+FILE(GLOB HDRS include/*.h)
 
 LINK_DIRECTORIES(
 	"/usr/lib/"
@@ -43,7 +34,7 @@ LINK_DIRECTORIES(
 )
 ADD_EXECUTABLE(Labyrinth-Irrlicht 
 	${SRCS}
-	#${HDRS}
+	${HDRS}
 	)
 
 TARGET_LINK_LIBRARIES(Labyrinth-Irrlicht
