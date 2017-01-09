@@ -29,6 +29,7 @@ myScene::myScene()
       time(0),
       start_timer(false)
 {
+    vec_ennemi_pos = load_ennemi_pos();
 }
 
 /**************************************************************************\
@@ -76,23 +77,29 @@ void myScene::scene_run()
 {
     while(device->run())
     {
-         driver->beginScene(true, true, iv::SColor(100,150,200,255));
+        driver->beginScene(true, true, iv::SColor(100,150,200,255));
 
-         // Shoot
-         gun_shoot();
-         if(is_ennemi_dead == false) sk1.hasPlayerInSight(node_sphere);
-         display_map();
+        // Shoot
+        gun_shoot();
+        display_map();
 
-         if(receiver.get_display_menu() == false)
-             smgr->drawAll();
-         else
-         {
-             create_window();
-         }
 
-         gui->drawAll();
+        if(receiver.get_display_menu() == false){
+            smgr->drawAll();
+            for(int i = 0; i < vec_ennemy.size(); ++i){
+                if(vec_ennemy[i].isDead == false) vec_ennemy[i].hasPlayerInSight(node_sphere);
+            }
+        }
+        else
+        {
+            create_window();
+        }
 
-         driver->endScene();
+
+
+        gui->drawAll();
+
+        driver->endScene();
 
     }
     device->drop();
@@ -100,18 +107,18 @@ void myScene::scene_run()
 
 void myScene::create_window()
 {
-     // Affichage du fond pour le menu
-     iv::ITexture* TextMenu = driver->getTexture("data/Textures/background_menu.jpeg");
-     ig::IGUIImage* Im_BackgroundMenu = gui->addImage(ic::rect<s32>(0,0,800,800));
-     Im_BackgroundMenu->setImage(TextMenu);
+    // Affichage du fond pour le menu
+    iv::ITexture* TextMenu = driver->getTexture("data/Textures/background_menu.jpeg");
+    ig::IGUIImage* Im_BackgroundMenu = gui->addImage(ic::rect<s32>(0,0,800,800));
+    Im_BackgroundMenu->setImage(TextMenu);
 
-     // Nom du Jeu Vidéo
-     iv::ITexture* tTitle = driver->getTexture("data/Textures/menu_name.png");
-     ig::IGUIImage* Im_Title = gui->addImage(ic::rect<s32>(200,20,800,800));
-     Im_Title->setImage(tTitle);
+    // Nom du Jeu Vidéo
+    iv::ITexture* tTitle = driver->getTexture("data/Textures/menu_name.png");
+    ig::IGUIImage* Im_Title = gui->addImage(ic::rect<s32>(200,20,800,800));
+    Im_Title->setImage(tTitle);
 
-     // Ajouter les menus
-     irr::gui::IGUIButton *New_game_button = gui->addButton(irr::core::rect<irr::s32>(220,150,350,200), 0, -1, L"Nouvelle Partie");
+    // Ajouter les menus
+    irr::gui::IGUIButton *New_game_button = gui->addButton(irr::core::rect<irr::s32>(220,150,350,200), 0, -1, L"Nouvelle Partie");
 }
 
 void myScene::display_map()
@@ -161,11 +168,40 @@ void myScene::init_score()
 
 void myScene::load_enemies()
 {
-    sk1 = skeleton(device,ic::vector3df(-40, 25, 302),ic::vector3df(0, 90, 0),1);
+    /*sk1 = skeleton(device,ic::vector3df(-40, 17, 302),ic::vector3df(0, 0, 0),1);
     is::IAnimatedMeshSceneNode *node_ennemi = sk1.getNode();
 
     is::ITriangleSelector *selector2 = smgr->createTriangleSelector(node_ennemi);
     node_ennemi->setTriangleSelector(selector2);
+
+    scene::ISceneNodeAnimator *anim;
+    anim = smgr->createCollisionResponseAnimator(node_scene->getTriangleSelector(),
+                                                     node_ennemi,  // Le noeud que l'on veut gérer
+                                                     ic::vector3df(25, 25, 25), // "rayons" de la caméra
+                                                     ic::vector3df(0, -9.81, 0),  // gravité
+                                                     ic::vector3df(0, 0, 0));  // décalage du centre
+    node_ennemi->addAnimator(anim);*/
+
+    for(int i = 0; i < vec_ennemi_pos.size(); ++i){
+        skeleton sk_current = skeleton(device,vec_ennemi_pos[i],ic::vector3df(0, 0, 0),i+1);
+
+        is::IAnimatedMeshSceneNode *node_ennemi = sk_current.getNode();
+
+        is::ITriangleSelector *selector_ennemy = smgr->createTriangleSelector(node_ennemi);
+        node_ennemi->setTriangleSelector(selector_ennemy);
+
+        scene::ISceneNodeAnimator *anim;
+        anim = smgr->createCollisionResponseAnimator(node_scene->getTriangleSelector(),
+                                                     node_ennemi,  // Le noeud que l'on veut gérer
+                                                     ic::vector3df(25, 25, 25), // "rayons" de la caméra
+                                                     ic::vector3df(0, -9.81, 0),  // gravité
+                                                     ic::vector3df(0, 0, 0));  // décalage du centre
+        node_ennemi->addAnimator(anim);
+
+        vec_ennemy.push_back(sk_current);
+    }
+
+    //sk1 = vec_ennemy[0];
 }
 
 void myScene::load_camera_gun()
@@ -201,21 +237,21 @@ void myScene::load_camera_gun()
     keyMap[8].KeyCode = KEY_SPACE;
 
     camera = smgr->addCameraSceneNodeFPS(nullptr,
-                                            100,         // Vitesse de rotation
-                                            .6,          // Vitesse de déplacement
-                                            11,          // Identifiant
-                                            keyMap, 9,  // Table de changement de touches
-                                            true,        // pas de possibilité de voler
-                                            5);          // Vitesse saut
+                                         100,         // Vitesse de rotation
+                                         .6,          // Vitesse de déplacement
+                                         11,          // Identifiant
+                                         keyMap, 9,  // Table de changement de touches
+                                         true,        // pas de possibilité de voler
+                                         5);          // Vitesse saut
     camera->setPosition(ic::vector3df(-151, 40, 40));
     camera->setTarget(ic::vector3df(-200, 40, 40));
 
     scene::ISceneNodeAnimator *anim;
     anim = smgr->createCollisionResponseAnimator(selector,
-                                                     camera,  // Le noeud que l'on veut gérer
-                                                     ic::vector3df(25, 25, 25), // "rayons" de la caméra
-                                                     ic::vector3df(0, -9.81, 0),  // gravité
-                                                     ic::vector3df(0, 0, 0));  // décalage du centre
+                                                 camera,  // Le noeud que l'on veut gérer
+                                                 ic::vector3df(25, 25, 25), // "rayons" de la caméra
+                                                 ic::vector3df(0, -9.81, 0),  // gravité
+                                                 ic::vector3df(0, 0, 0));  // décalage du centre
     camera->addAnimator(anim);
 
     // ***** GUN ***** //
@@ -233,8 +269,8 @@ void myScene::load_camera_gun()
     node_gun->setMaterialTexture(0, gun_texture);
     node_gun->setMaterialFlag(iv::EMF_LIGHTING, false);
     receiver.set_node(camera);
-	
-	//BoundingSphere For collision
+
+    //BoundingSphere For collision
     is::IMesh *mesh_sphere = smgr->getGeometryCreator()->createSphereMesh(5.f);
     node_sphere = smgr->addMeshSceneNode(mesh_sphere,camera);
     node_sphere->setPosition(ic::vector3df(0, -5, 10));
@@ -242,7 +278,7 @@ void myScene::load_camera_gun()
     node_sphere->setID(6);
     //node_sphere->setMaterialTexture(driver->getTexture("data/textures/texture_lab"));
     //node_sphere->setMaterialFlag(irr::video::EMF_LIGHTING, false);
-    node_sphere->setVisible(true);
+    node_sphere->setVisible(false);
 
 }
 
@@ -250,7 +286,7 @@ void myScene::check_timer()
 {
     if(time == 52)
     {
-        is::IAnimatedMeshSceneNode *node_ennemi = sk1.getNode();
+        is::IAnimatedMeshSceneNode *node_ennemi = vec_ennemy[0].getNode();
         node_ennemi->remove();
         start_timer = false;
         is_ennemi_dead = true;
@@ -300,26 +336,77 @@ void myScene::gun_shoot()
         ic::vector3df intersection;
         ic::triangle3df hit_triangle;
 
-        if(is_ennemi_dead == false)
-        {
-            is::IAnimatedMeshSceneNode *node_ennemi = sk1.getNode();
-            is::ISceneNode *selected_scene_node = collision_manager->getSceneNodeAndCollisionPointFromRay(ray,intersection,hit_triangle,node_ennemi->getID());
+        //if(is_ennemi_dead == false)
+        //{
+            for(int i = 0; i < vec_ennemy.size(); ++i){
+              if(vec_ennemy[i].isDead == false){
+                    is::IAnimatedMeshSceneNode *node_ennemi = vec_ennemy[i].getNode();
+                    is::ISceneNode *selected_scene_node = collision_manager->getSceneNodeAndCollisionPointFromRay(ray,intersection,hit_triangle,node_ennemi->getID());
 
-            if (selected_scene_node)
-            {
-                    if(node_ennemi == selected_scene_node)
+                    if (selected_scene_node)
                     {
-                        node_ennemi->setLoopMode(false);
-                        node_ennemi->setMD2Animation(is::EMAT_DEATH_FALLBACK);
-                        start_timer = true;
+                        if(node_ennemi == selected_scene_node)
+                        {
+                            vec_ennemy[i].isDead = true;
+                            vec_ennemy[i].stopAnimation();
+                            node_ennemi->setLoopMode(false);
+                            node_ennemi->setMD2Animation(is::EMAT_DEATH_FALLBACK);
+                            //start_timer = true;
+                        }
                     }
+
+                }
             }
-        }
+        //}
     }
 
     if(start_timer == true)
     {
-         time = time + 1;
-         check_timer();
+        time = time + 1;
+        check_timer();
     }
+}
+
+std::vector<ic::vector3df> myScene::load_ennemi_pos(){
+
+    std::vector<ic::vector3df> vec;
+    vec.push_back(ic::vector3df(ic::vector3df(-40, 17, 302))); //1
+    vec.push_back(ic::vector3df(ic::vector3df(122, 17, 61))); //2
+    vec.push_back(ic::vector3df(ic::vector3df(53, 17, -130))); //3
+    vec.push_back(ic::vector3df(ic::vector3df(-236, 17, 363))); //4
+    vec.push_back(ic::vector3df(ic::vector3df(-355, 17, 151))); //5
+    vec.push_back(ic::vector3df(ic::vector3df(297,17,-334))); //6
+    vec.push_back(ic::vector3df(ic::vector3df(-342, 17, -383))); //7
+    vec.push_back(ic::vector3df(ic::vector3df(-44, 17, -926))); //8
+    vec.push_back(ic::vector3df(ic::vector3df(-273, 17, -914))); //9
+    vec.push_back(ic::vector3df(ic::vector3df(-551, 17, -918))); //10
+    vec.push_back(ic::vector3df(ic::vector3df(-730, 17, -730))); //11
+    vec.push_back(ic::vector3df(ic::vector3df(448, 17, 110))); //12
+    vec.push_back(ic::vector3df(ic::vector3df(640, 17, -232))); //13
+    vec.push_back(ic::vector3df(ic::vector3df(734, 17, -526))); //14
+    vec.push_back(ic::vector3df(ic::vector3df(248, 17, -787 ))); //15
+    vec.push_back(ic::vector3df(ic::vector3df(530, 17, -918))); //16
+    vec.push_back(ic::vector3df(ic::vector3df(738, 17, -926))); //17
+    vec.push_back(ic::vector3df(ic::vector3df(893, 17, -910))); //18
+    vec.push_back(ic::vector3df(ic::vector3df(930, 17, -306))); //19
+    vec.push_back(ic::vector3df(ic::vector3df(926, 17, 359 ))); //20
+    vec.push_back(ic::vector3df(ic::vector3df(840, 17, 163))); //21
+    vec.push_back(ic::vector3df(ic::vector3df(832, 17, 555))); //22
+    vec.push_back(ic::vector3df(ic::vector3df(640, 17, 293))); //23
+    vec.push_back(ic::vector3df(ic::vector3df(546, 17, 942))); //24
+    vec.push_back(ic::vector3df(ic::vector3df(440, 17, 534))); //25
+    vec.push_back(ic::vector3df(ic::vector3df(-44, 17, 644))); //26
+    vec.push_back(ic::vector3df(ic::vector3df(-253, 17, 742))); //27
+    vec.push_back(ic::vector3df(ic::vector3df(-604, 17, 942))); //28
+    vec.push_back(ic::vector3df(ic::vector3df(-551, 17, 563))); //29
+    vec.push_back(ic::vector3df(ic::vector3df(-832, 17, 551))); //30
+    vec.push_back(ic::vector3df(ic::vector3df(-930, 17, 546))); //31
+    vec.push_back(ic::vector3df(ic::vector3df(-926, 17, -191))); //32
+    vec.push_back(ic::vector3df(ic::vector3df(-628, 17, -138))); //33
+    vec.push_back(ic::vector3df(ic::vector3df(-828, 17, -330))); //34
+    vec.push_back(ic::vector3df(ic::vector3df(836, 17, -828))); //35
+
+    return vec;
+
+
 }

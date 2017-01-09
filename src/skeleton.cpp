@@ -5,7 +5,7 @@ skeleton::skeleton(){
 
 }
 
-skeleton::skeleton(IrrlichtDevice *_device, ic::vector3df position, ic::vector3df rotation, int _id):device(_device),id(_id){
+skeleton::skeleton(IrrlichtDevice *_device, ic::vector3df position, ic::vector3df rotation, int _id):device(_device),id(_id),isRunning(false), isDead(false){
 
     smgr = device->getSceneManager();
     driver = device->getVideoDriver();
@@ -16,8 +16,10 @@ skeleton::skeleton(IrrlichtDevice *_device, ic::vector3df position, ic::vector3d
     node_skeleton = smgr->addAnimatedMeshSceneNode(mesh_skeleton);
     node_skeleton->setMaterialFlag(iv::EMF_LIGHTING, false);
     node_skeleton->setMD2Animation(is::EMAT_STAND);
+    node_skeleton->setScale(core::vector3df(0.6f,0.6f,0.6f));
     node_skeleton->setPosition(position);
     node_skeleton->setRotation(rotation);
+
 
     // On specifie sa texture
 
@@ -38,8 +40,8 @@ bool skeleton::hasPlayerInSight(is::ISceneNode *node_sphere){
     node_skeleton->updateAbsolutePosition();
     node_sphere->updateAbsolutePosition();
     ic::line3d<f32> ray(node_skeleton->getAbsolutePosition(),node_sphere->getAbsolutePosition());
-
-/*    std::cout<<node_skeleton->getAbsolutePosition().X<<" , ";
+    node_skeleton->setRotation(core::vector3df(0.0f,(node_sphere->getAbsolutePosition().Y - node_skeleton->getAbsolutePosition().Y)*180/3.14,0.0f));
+    /*    std::cout<<node_skeleton->getAbsolutePosition().X<<" , ";
     std::cout<<node_skeleton->getAbsolutePosition().Y<<" , ";
     std::cout<<node_skeleton->getAbsolutePosition().Z<<" : ";
     std::cout<<node_sphere->getAbsolutePosition().X<<" , ";
@@ -51,21 +53,41 @@ bool skeleton::hasPlayerInSight(is::ISceneNode *node_sphere){
 
     is::ISceneNode *selected_scene_node = collision_manager->getSceneNodeAndCollisionPointFromRay(ray,intersection,hit_triangle,node_sphere->getID());
 
-    std::cout<<"Test"<<std::endl;
 
-    if (selected_scene_node)
+    if (!selected_scene_node)
     {
-        std::cout<<"test1 :"<<selected_scene_node->getID()<<std::endl;
-            if(node_sphere == selected_scene_node)
-            {
-                std::cout<<"test2"<<std::endl;
-                node_skeleton->setLoopMode(true);
-                node_skeleton->setMD2Animation(is::EMAT_JUMP);
-                //node_ennemi->drop();
-                return true;
-            }
+
+        if(isRunning==false && isDead == false){
+            std::cout<<"J'anniùme"<<std::endl;
+        is::ISceneNodeAnimator *anim = smgr->createFlyStraightAnimator(node_skeleton->getAbsolutePosition(),core::vector3df(node_sphere->getAbsolutePosition().X,node_skeleton->getAbsolutePosition().Y,node_sphere->getAbsolutePosition().Z),1000);
+        node_skeleton->addAnimator(anim);
+        node_skeleton->setLoopMode(true);
+        node_skeleton->setMD2Animation(is::EMAT_RUN);
+
+        isRunning = true;
+
+        }
+        else if(isDead){
+           // stopAnimation();
+            isRunning = false;
+        }
+        return true;
+
+
+    }
+    else{
+        if(isRunning){
+            stopAnimation();
+            isRunning = false;
+         }
     }
 
     return false;
+}
+
+void skeleton::stopAnimation(){
+    node_skeleton->removeAnimators();
+    node_skeleton->setLoopMode(false);
+    node_skeleton->setMD2Animation(is::EMAT_STAND);
 }
 

@@ -39,12 +39,15 @@ class myScene
     is::IAnimatedMeshSceneNode *node_gun;
     is::IMeshSceneNode *node_sphere;
 
-    skeleton sk1;
+    std::vector<skeleton> vec_ennemy;
 
     // Timer pour mourir
     int time;
     bool start_timer;
     bool is_ennemi_dead;
+
+    std::vector<ic::vector3df> vec_ennemi_pos;
+    std::vector<ic::vector3df> load_ennemi_pos();
 
 public:
     /** METHODS **/
