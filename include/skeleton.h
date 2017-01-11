@@ -22,13 +22,29 @@ class skeleton {
         bool isRunning;
 
 
+        // Timer pour mourir
+        int time;
+        bool timer_death;
+        bool is_dead;
+
 public:
         skeleton();
         skeleton(IrrlichtDevice *_device,ic::vector3df position, ic::vector3df rotation, int _id);
         is::IAnimatedMeshSceneNode* getNode();
         bool hasPlayerInSight(is::ISceneNode *node_gun);
+
         void stopAnimation();
-        bool isDead;
+        bool isDead();
+
+        void start_dead_animation();
+
+        /** Fonction de check timer pour l'animation de mort du zombie **/
+        void check_death_timer();
+
+        //Code fourni par Sylvain MIGUELEZ && David BAIO
+        void faceModelToPlayer();
+
+
 };
 
 

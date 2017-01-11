@@ -111,19 +111,16 @@ void myScene::scene_run()
 
         check_if_game_is_won();
 
+        smgr->drawAll();
+        for(int i = 0; i < vec_ennemy.size(); ++i){
+            if(vec_ennemy[i].isDead ()== false){
 
-       // if(receiver.get_display_menu() == false){
-            smgr->drawAll();
-            for(int i = 0; i < vec_ennemy.size(); ++i){
-                if(vec_ennemy[i].isDead == false) vec_ennemy[i].hasPlayerInSight(node_sphere);
+                vec_ennemy[i].faceModelToPlayer();
+                vec_ennemy[i].hasPlayerInSight(node_sphere);
+
             }
-       // }
-       // else
-       // {
-       //     create_window();
-       // }
-
-
+            vec_ennemy[i].check_death_timer();
+        }
 
         gui->drawAll();
 
@@ -218,8 +215,8 @@ void myScene::update_timer()
     }
     else
     {
-       timer_images[1]->setImage(numbers[0]);
-       timer_images[0]->setImage(numbers[remaining_time]);
+        timer_images[1]->setImage(numbers[0]);
+        timer_images[0]->setImage(numbers[remaining_time]);
     }
 
 }
@@ -247,20 +244,6 @@ void myScene::check_if_game_is_won()
 
 void myScene::load_enemies()
 {
-    /*sk1 = skeleton(device,ic::vector3df(-40, 17, 302),ic::vector3df(0, 0, 0),1);
-    is::IAnimatedMeshSceneNode *node_ennemi = sk1.getNode();
-
-    is::ITriangleSelector *selector2 = smgr->createTriangleSelector(node_ennemi);
-    node_ennemi->setTriangleSelector(selector2);
-
-    scene::ISceneNodeAnimator *anim;
-    anim = smgr->createCollisionResponseAnimator(node_scene->getTriangleSelector(),
-                                                     node_ennemi,  // Le noeud que l'on veut gérer
-                                                     ic::vector3df(25, 25, 25), // "rayons" de la caméra
-                                                     ic::vector3df(0, -9.81, 0),  // gravité
-                                                     ic::vector3df(0, 0, 0));  // décalage du centre
-    node_ennemi->addAnimator(anim);*/
-
     for(int i = 0; i < vec_ennemi_pos.size(); ++i){
         skeleton sk_current = skeleton(device,vec_ennemi_pos[i],ic::vector3df(0, 0, 0),i+1);
 
@@ -361,17 +344,6 @@ void myScene::load_camera_gun()
 
 }
 
-void myScene::check_timer()
-{
-    if(time == 52)
-    {
-        is::IAnimatedMeshSceneNode *node_ennemi = vec_ennemy[0].getNode();
-        node_ennemi->remove();
-        start_timer = false;
-        is_ennemi_dead = true;
-    }
-}
-
 /**************************************************************************\
  * myScene::shoot                                                *
 \**************************************************************************/
@@ -384,41 +356,14 @@ void myScene::gun_shoot()
 
     if (receiver.is_mouse_pressed(click_x, click_y))
     {
-        // Ball
-        /*is::IAnimatedMesh *ball = smgr->getMesh("data/Models/Ball.obj");
-        is::IAnimatedMeshSceneNode *node_ball = smgr->addAnimatedMeshSceneNode(ball, camera);
-        node_ball->setPosition(ic::vector3df(-2.5, -8, 31));
-        node_ball->setScale(ic::vector3df(0.05, 0.05, 0.05));
-
-        ic::line3d<f32> ray;
-        ray = collision_manager->getRayFromScreenCoordinates(ic::position2d<s32>(click_x, click_y));
-        ic::vector3df intersection;
-        ic::triangle3df hit_triangle;
-        is::ISceneNode *selected_scene_node = collision_manager->getSceneNodeAndCollisionPointFromRay(
-                            ray,
-                            intersection, // On récupère ici les coordonnées 3D de l'intersection
-                            hit_triangle, // et le triangle intersecté
-                            node_scene->getID()); // On ne veut que des noeuds avec cet identifiant
-
-        // Animation
-        scene::ISceneNodeAnimator *shoot_anim;
-        shoot_anim = smgr->createFlyStraightAnimator(    node_ball->getPosition(), // Start Point
-                                                         ic::vector3df(click_x, click_y, 100),  // End Point
-                                                         5, // Time for Way
-                                                         false, // loop
-                                                         false);  // pingpong
-        node_ball->addAnimator(shoot_anim);*/
-
         ic::line3d<f32> ray;
         ray = collision_manager->getRayFromScreenCoordinates(ic::position2d<s32>(click_x, click_y));
 
         ic::vector3df intersection;
         ic::triangle3df hit_triangle;
 
-        //if(is_ennemi_dead == false)
-        //{
         for(int i = 0; i < vec_ennemy.size(); ++i){
-            if(vec_ennemy[i].isDead == false){
+            if(vec_ennemy[i].isDead() == false){
                 is::IAnimatedMeshSceneNode *node_ennemi = vec_ennemy[i].getNode();
                 is::ISceneNode *selected_scene_node = collision_manager->getSceneNodeAndCollisionPointFromRay(ray,intersection,hit_triangle,node_ennemi->getID());
 
@@ -426,23 +371,12 @@ void myScene::gun_shoot()
                 {
                     if(node_ennemi == selected_scene_node)
                     {
-                        vec_ennemy[i].isDead = true;
-                        vec_ennemy[i].stopAnimation();
-                        node_ennemi->setLoopMode(false);
-                        node_ennemi->setMD2Animation(is::EMAT_DEATH_FALLBACK);
-                        //start_timer = true;
+                        vec_ennemy[i].start_dead_animation();
                     }
                 }
 
             }
         }
-        //}
-    }
-
-    if(start_timer == true)
-    {
-        time = time + 1;
-        check_timer();
     }
 }
 

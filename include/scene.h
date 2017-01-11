@@ -81,6 +81,7 @@ public:
 
     /** Fonction de tir **/
     void gun_shoot();
+
     /** Fonction de check timer pour l'animation de mort du zombie **/
     void check_timer();
 

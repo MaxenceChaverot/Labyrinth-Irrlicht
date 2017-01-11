@@ -5,7 +5,7 @@ skeleton::skeleton(){
 
 }
 
-skeleton::skeleton(IrrlichtDevice *_device, ic::vector3df position, ic::vector3df rotation, int _id):device(_device),id(_id),isRunning(false), isDead(false){
+skeleton::skeleton(IrrlichtDevice *_device, ic::vector3df position, ic::vector3df rotation, int _id):device(_device),id(_id),isRunning(false), is_dead(false), timer_death(false){
 
 	smgr = device->getSceneManager();
 	driver = device->getVideoDriver();
@@ -34,6 +34,18 @@ is::IAnimatedMeshSceneNode* skeleton::getNode(){
 	return node_skeleton;
 }
 
+//Code fourni par Sylvain MIGUELEZ && David BAIO
+void skeleton::faceModelToPlayer(){
+
+    // Rotate node to face player
+    is::ICameraSceneNode*  const cam=node_skeleton->getSceneManager()->getActiveCamera();
+    core::vector3df rot (node_skeleton->getRotation().X,
+                         atan2(cam->getPosition().X-node_skeleton->getPosition().X, cam->getPosition().Z-node_skeleton->getPosition().Z) / M_PI * 180, //conversion rad->degre
+                         node_skeleton->getRotation().Z);
+    rot.Y -= 90.0f;
+    node_skeleton->setRotation(rot);
+}
+
 bool skeleton::hasPlayerInSight(is::ISceneNode *node_sphere){
 
 	is::ISceneCollisionManager *collision_manager = smgr->getSceneCollisionManager();
@@ -50,7 +62,7 @@ bool skeleton::hasPlayerInSight(is::ISceneNode *node_sphere){
 	if (!selected_scene_node)
 	{
 
-		if(isRunning==false && isDead == false){
+        if(isRunning==false && is_dead == false){
 			is::ISceneNodeAnimator *anim = smgr->createFlyStraightAnimator(node_skeleton->getAbsolutePosition(),core::vector3df(node_sphere->getAbsolutePosition().X,node_skeleton->getAbsolutePosition().Y,node_sphere->getAbsolutePosition().Z),1000);
 			node_skeleton->addAnimator(anim);
 			node_skeleton->setLoopMode(true);
@@ -59,7 +71,7 @@ bool skeleton::hasPlayerInSight(is::ISceneNode *node_sphere){
 			isRunning = true;
 
 		}
-		else if(isDead){
+        else if(is_dead){
 			// stopAnimation();
 			isRunning = false;
 		}
@@ -83,3 +95,24 @@ void skeleton::stopAnimation(){
 	node_skeleton->setMD2Animation(is::EMAT_STAND);
 }
 
+void skeleton::start_dead_animation(){
+    is_dead=true;
+    stopAnimation();
+    node_skeleton->setLoopMode(false);
+    node_skeleton->setMD2Animation(is::EMAT_DEATH_FALLBACK);
+    timer_death = true;
+}
+
+void skeleton::check_death_timer()
+{
+    if(timer_death){
+        if(time == 52)
+        {
+            node_skeleton->remove();
+            timer_death = false;
+        }
+        else time++;
+    }
+}
+
+bool skeleton::isDead(){ return is_dead;}
