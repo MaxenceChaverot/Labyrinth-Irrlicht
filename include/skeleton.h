@@ -29,7 +29,6 @@ public:
         bool hasPlayerInSight(is::ISceneNode *node_gun);
         void stopAnimation();
         bool isDead;
-       // ~skeleton();
 };
 
 

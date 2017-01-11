@@ -15,7 +15,7 @@ namespace iv = irr::video;
  * EventReceiver::EventReceiver                                           *
 \**************************************************************************/
 EventReceiver::EventReceiver()
-  : node(nullptr), button_pressed(false), display_map(false), remove_map(false), display_menu(false)
+  : node(nullptr), button_pressed(false), display_map(false), remove_map(false)
 {
 }
 
@@ -31,19 +31,15 @@ bool EventReceiver::keyboard(const SEvent &event)
     switch (event.KeyInput.Key)
     {
        case KEY_KEY_M:
-        display_map = true;
+        display_map = true; // Display the map when the user click on the key M
         remove_map = false;
         break;
        case KEY_KEY_Q:
-        remove_map = true;
+        remove_map = true; // Remove the map when the user click on the key T
         display_map = false;
         break;
        case KEY_ESCAPE:
         exit(0);
-       case KEY_KEY_V:
-        if(display_menu == true) display_menu = false;
-        display_menu = true;
-        break;
        default:;
     }
     node->setPosition(position);
@@ -113,7 +109,7 @@ void EventReceiver::set_node(irr::scene::ISceneNode *n)
 \**************************************************************************/
 bool EventReceiver::is_mouse_pressed(int &x, int &y)
 {
-    if (button_pressed)
+    if(button_pressed)
     {
         x = old_x;
         y = old_y;
@@ -136,12 +132,4 @@ bool EventReceiver::get_display_map()
 bool EventReceiver::get_remove_map()
 {
     return remove_map;
-}
-
-/**************************************************************************\
- * EventReceiver::get_remove_map                                       *
-\**************************************************************************/
-bool EventReceiver::get_display_menu()
-{
-    return display_menu;
 }

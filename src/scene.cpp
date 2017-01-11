@@ -27,7 +27,8 @@ myScene::myScene()
       node_scene(nullptr),
       is_ennemi_dead(false),
       time(0),
-      start_timer(false)
+      start_timer(false),
+      tps(0)
 {
     vec_ennemi_pos = load_ennemi_pos();
 }
@@ -44,9 +45,7 @@ void myScene::scene_init()
     smgr = device->getSceneManager();
     gui  = device->getGUIEnvironment();
 
-    // Chargement du décors :
-
-    // ***** DECORS *****
+    /** Chargement du décors */
 
     // On charge le mesh (fichier .obj)
     mesh_scene = smgr->getMesh("data/Map/Labyrinth.obj");
@@ -66,8 +65,18 @@ void myScene::scene_init()
     // Chargement des enemies
     load_enemies();
 
-    // Initialisation du score
-    init_score();
+    /** Initialisation du timer qui gère le temps global d'exécution du jeu */
+
+    // Initialisation du temps
+    init_timer();
+
+    // Initialisation des variables pour gérer le temps global
+    timer = device->getTimer();
+    remaining_time = 10;
+    timer->start();
+
+    time_minute = 60000; // Une minute
+    is_finished = false;
 }
 
 /**************************************************************************\
@@ -81,19 +90,38 @@ void myScene::scene_run()
 
         // Shoot
         gun_shoot();
+
+        // Affichage de la map
         display_map();
 
+        // Mise à jour du temps restant du jeu
+        update_timer();
+        bool is_minute_past = check_if_minute_past();
+        if(is_minute_past == true)
+        {
+            if(remaining_time != 0) remaining_time = remaining_time - 1;
+        }
 
-        if(receiver.get_display_menu() == false){
+        // Si le jeu est perdu car le temps est écoulé
+        is_finished = check_global_time();
+        if (is_finished == true)
+        {
+            game_over();
+        }
+
+        check_if_game_is_won();
+
+
+       // if(receiver.get_display_menu() == false){
             smgr->drawAll();
             for(int i = 0; i < vec_ennemy.size(); ++i){
                 if(vec_ennemy[i].isDead == false) vec_ennemy[i].hasPlayerInSight(node_sphere);
             }
-        }
-        else
-        {
-            create_window();
-        }
+       // }
+       // else
+       // {
+       //     create_window();
+       // }
 
 
 
@@ -105,22 +133,9 @@ void myScene::scene_run()
     device->drop();
 }
 
-void myScene::create_window()
-{
-    // Affichage du fond pour le menu
-    iv::ITexture* TextMenu = driver->getTexture("data/Textures/background_menu.jpeg");
-    ig::IGUIImage* Im_BackgroundMenu = gui->addImage(ic::rect<s32>(0,0,800,800));
-    Im_BackgroundMenu->setImage(TextMenu);
-
-    // Nom du Jeu Vidéo
-    iv::ITexture* tTitle = driver->getTexture("data/Textures/menu_name.png");
-    ig::IGUIImage* Im_Title = gui->addImage(ic::rect<s32>(200,20,800,800));
-    Im_Title->setImage(tTitle);
-
-    // Ajouter les menus
-    irr::gui::IGUIButton *New_game_button = gui->addButton(irr::core::rect<irr::s32>(220,150,350,200), 0, -1, L"Nouvelle Partie");
-}
-
+/**************************************************************************\
+ * myScene::Affichage de la carte du labyrinthe                                       *
+\**************************************************************************/
 void myScene::display_map()
 {
     iv::ITexture* TextMap = driver->getTexture("screenshot/carte.png");
@@ -134,12 +149,14 @@ void myScene::display_map()
     }
     if(receiver.get_remove_map() == true)
     {
-        std::cout<<"LALLALALALALALALAALALAL"<<std::endl;
-        LabMap->remove();
+        TextMap->drop();
+        //LabMap->remove();
     }
 }
-
-void myScene::init_score()
+/**************************************************************************\
+ * myScene::Init global timer (the player has 15 minutes to play)                                   *
+\**************************************************************************/
+void myScene::init_timer()
 {
     numbers.push_back(driver->getTexture("data/Nombres/0.png"));
     numbers.push_back(driver->getTexture("data/Nombres/1.png"));
@@ -153,17 +170,79 @@ void myScene::init_score()
     numbers.push_back(driver->getTexture("data/Nombres/9.png"));
 
     // Création des places pour les chiffres
-    score_images.push_back(gui->addImage(ic::rect<s32>(90,10,130,50)));
-    score_images.push_back(gui->addImage(ic::rect<s32>(50,10,90,50)));
-    score_images.push_back(gui->addImage(ic::rect<s32>(10,10,50,50)));
+    timer_images.push_back(gui->addImage(ic::rect<s32>(570,10,610,50)));
+    timer_images.push_back(gui->addImage(ic::rect<s32>(530,10,570,50)));
 
-    score_images[0]->setScaleImage(true);
-    score_images[1]->setScaleImage(true);
-    score_images[2]->setScaleImage(true);
+    timer_images[0]->setScaleImage(true);
+    timer_images[1]->setScaleImage(true);
+}
 
-    score_images[0]->setImage(numbers[0]);
-    score_images[1]->setImage(numbers[0]);
-    score_images[2]->setImage(numbers[0]);
+/**************************************************************************\
+ * myScene::Check minute past                                   *
+\**************************************************************************/
+bool  myScene::check_if_minute_past()
+{
+    bool result = false;
+
+    tps = timer->getTime();
+    if(tps >= time_minute)
+    {
+        tps = 0;
+        timer->setTime(0);
+        result = true;
+    }
+
+    return result;
+}
+
+/**************************************************************************\
+ * myScene::Check global timer (the player has 15 minutes)                                      *
+\**************************************************************************/
+bool myScene::check_global_time()
+{
+    bool result = false;
+    if(remaining_time == 0) result = true;
+
+    return result;
+}
+
+/**************************************************************************\
+ * myScene::Update global timer                                     *
+\**************************************************************************/
+void myScene::update_timer()
+{
+    if(remaining_time == 10)
+    {
+        timer_images[1]->setImage(numbers[1]);
+        timer_images[0]->setImage(numbers[0]);
+    }
+    else
+    {
+       timer_images[1]->setImage(numbers[0]);
+       timer_images[0]->setImage(numbers[remaining_time]);
+    }
+
+}
+
+/**************************************************************************\
+ * myScene::Game OVER                                        *
+\**************************************************************************/
+void myScene::game_over()
+{
+    gui->addMessageBox(L"GAME OVER", L"Your game time is over and you have not managed to get out of the labyrinth. \n You lost the game. \n You have to close the window and relaunch the game to replay.");
+}
+
+/**************************************************************************\
+ * myScene::Check if game is won                                     *
+\**************************************************************************/
+void myScene::check_if_game_is_won()
+{
+    // Si le joueur est à la sortie du labyrinthe
+    if(camera->getPosition().X  >= 880   &&   camera->getPosition().X  <= 920    &&  camera->getPosition().Z  >= 880   &&   camera->getPosition().Z  <= 920)
+    {
+        gui->addMessageBox(L"CONGRATULATION", L"Congratulations, you managed to find the exit of the labyrinth in less than ten minutes. \n You won the game. \n You have to close the window and relaunch the game to replay");
+    }
+
 }
 
 void myScene::load_enemies()
@@ -338,25 +417,25 @@ void myScene::gun_shoot()
 
         //if(is_ennemi_dead == false)
         //{
-            for(int i = 0; i < vec_ennemy.size(); ++i){
-              if(vec_ennemy[i].isDead == false){
-                    is::IAnimatedMeshSceneNode *node_ennemi = vec_ennemy[i].getNode();
-                    is::ISceneNode *selected_scene_node = collision_manager->getSceneNodeAndCollisionPointFromRay(ray,intersection,hit_triangle,node_ennemi->getID());
+        for(int i = 0; i < vec_ennemy.size(); ++i){
+            if(vec_ennemy[i].isDead == false){
+                is::IAnimatedMeshSceneNode *node_ennemi = vec_ennemy[i].getNode();
+                is::ISceneNode *selected_scene_node = collision_manager->getSceneNodeAndCollisionPointFromRay(ray,intersection,hit_triangle,node_ennemi->getID());
 
-                    if (selected_scene_node)
+                if (selected_scene_node)
+                {
+                    if(node_ennemi == selected_scene_node)
                     {
-                        if(node_ennemi == selected_scene_node)
-                        {
-                            vec_ennemy[i].isDead = true;
-                            vec_ennemy[i].stopAnimation();
-                            node_ennemi->setLoopMode(false);
-                            node_ennemi->setMD2Animation(is::EMAT_DEATH_FALLBACK);
-                            //start_timer = true;
-                        }
+                        vec_ennemy[i].isDead = true;
+                        vec_ennemy[i].stopAnimation();
+                        node_ennemi->setLoopMode(false);
+                        node_ennemi->setMD2Animation(is::EMAT_DEATH_FALLBACK);
+                        //start_timer = true;
                     }
-
                 }
+
             }
+        }
         //}
     }
 
