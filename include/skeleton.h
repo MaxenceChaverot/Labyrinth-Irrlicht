@@ -31,6 +31,7 @@ public:
         skeleton();
         skeleton(IrrlichtDevice *_device,ic::vector3df position, ic::vector3df rotation, int _id);
         is::IAnimatedMeshSceneNode* getNode();
+
         bool hasPlayerInSight(is::ISceneNode *node_gun);
 
         void stopAnimation();

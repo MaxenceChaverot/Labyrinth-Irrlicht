@@ -25,9 +25,6 @@ myScene::myScene()
       gui(nullptr),
       mesh_scene(nullptr),
       node_scene(nullptr),
-      is_ennemi_dead(false),
-      time(0),
-      start_timer(false),
       tps(0)
 {
     vec_ennemi_pos = load_ennemi_pos();
@@ -234,6 +231,7 @@ void myScene::game_over()
 \**************************************************************************/
 void myScene::check_if_game_is_won()
 {
+    std::cout<<" X = "<<camera->getPosition().X <<" Y = "<<camera->getPosition().Z<<std::endl;
     // Si le joueur est à la sortie du labyrinthe
     if(camera->getPosition().X  >= 880   &&   camera->getPosition().X  <= 920    &&  camera->getPosition().Z  >= 880   &&   camera->getPosition().Z  <= 920)
     {

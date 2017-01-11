@@ -53,11 +53,6 @@ class myScene
     //Les ennemis
     std::vector<skeleton> vec_ennemy;
 
-    // Timer pour mourir
-    int time;
-    bool start_timer;
-    bool is_ennemi_dead;
-
     //Position initiale des ennemis et fonction de remplissage
     std::vector<ic::vector3df> vec_ennemi_pos;
     std::vector<ic::vector3df> load_ennemi_pos();
@@ -81,9 +76,6 @@ public:
 
     /** Fonction de tir **/
     void gun_shoot();
-
-    /** Fonction de check timer pour l'animation de mort du zombie **/
-    void check_timer();
 
     /** Fonctions pour gérer le temps global du jeu **/
     void init_timer(); // initialisation du timer

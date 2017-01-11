@@ -5,33 +5,33 @@ skeleton::skeleton(){
 
 }
 
-skeleton::skeleton(IrrlichtDevice *_device, ic::vector3df position, ic::vector3df rotation, int _id):device(_device),id(_id),isRunning(false), is_dead(false), timer_death(false){
+skeleton::skeleton(IrrlichtDevice *_device, ic::vector3df position, ic::vector3df rotation, int _id):device(_device),id(_id),isRunning(false), is_dead(false), timer_death(false),time(0){
 
-	smgr = device->getSceneManager();
-	driver = device->getVideoDriver();
-	// On charge le mesh (fichier .obj)
-	is::IAnimatedMesh *mesh_skeleton = smgr->getMesh("data/Models/tris.md2");
+    smgr = device->getSceneManager();
+    driver = device->getVideoDriver();
+    // On charge le mesh (fichier .obj)
+    is::IAnimatedMesh *mesh_skeleton = smgr->getMesh("data/Models/tris.md2");
 
-	// On l'associe a un noeud de la scene
-	node_skeleton = smgr->addAnimatedMeshSceneNode(mesh_skeleton);
-	node_skeleton->setMaterialFlag(iv::EMF_LIGHTING, false);
-	node_skeleton->setMD2Animation(is::EMAT_STAND);
-	node_skeleton->setScale(core::vector3df(0.6f,0.6f,0.6f));
-	node_skeleton->setPosition(position);
-	node_skeleton->setRotation(rotation);
+    // On l'associe a un noeud de la scene
+    node_skeleton = smgr->addAnimatedMeshSceneNode(mesh_skeleton);
+    node_skeleton->setMaterialFlag(iv::EMF_LIGHTING, false);
+    node_skeleton->setMD2Animation(is::EMAT_STAND);
+    node_skeleton->setScale(core::vector3df(0.6f,0.6f,0.6f));
+    node_skeleton->setPosition(position);
+    node_skeleton->setRotation(rotation);
 
 
-	// On specifie sa texture
+    // On specifie sa texture
 
-	node_skeleton->setMaterialTexture(0, driver->getTexture("data/Textures/red_skeleton_texture.pcx"));
+    node_skeleton->setMaterialTexture(0, driver->getTexture("data/Textures/red_skeleton_texture.pcx"));
 
-	// On rend le mesh insensible a la lumiere
-	//node_perso->setMaterialFlag(irr::video::EMF_LIGHTING, false);
+    // On rend le mesh insensible a la lumiere
+    //node_perso->setMaterialFlag(irr::video::EMF_LIGHTING, false);
 
 }
 
 is::IAnimatedMeshSceneNode* skeleton::getNode(){
-	return node_skeleton;
+    return node_skeleton;
 }
 
 //Code fourni par Sylvain MIGUELEZ && David BAIO
@@ -48,51 +48,50 @@ void skeleton::faceModelToPlayer(){
 
 bool skeleton::hasPlayerInSight(is::ISceneNode *node_sphere){
 
-	is::ISceneCollisionManager *collision_manager = smgr->getSceneCollisionManager();
-	node_skeleton->updateAbsolutePosition();
-	node_sphere->updateAbsolutePosition();
-	ic::line3d<f32> ray(node_skeleton->getAbsolutePosition(),node_sphere->getAbsolutePosition());
+    is::ISceneCollisionManager *collision_manager = smgr->getSceneCollisionManager();
+    node_skeleton->updateAbsolutePosition();
+    node_sphere->updateAbsolutePosition();
+    ic::line3d<f32> ray(node_skeleton->getAbsolutePosition(),node_sphere->getAbsolutePosition());
 
-	ic::vector3df intersection;
-	ic::triangle3df hit_triangle;
+    ic::vector3df intersection;
+    ic::triangle3df hit_triangle;
 
-	is::ISceneNode *selected_scene_node = collision_manager->getSceneNodeAndCollisionPointFromRay(ray,intersection,hit_triangle,node_sphere->getID());
+    is::ISceneNode *selected_scene_node = collision_manager->getSceneNodeAndCollisionPointFromRay(ray,intersection,hit_triangle,node_sphere->getID());
 
 
-	if (!selected_scene_node)
-	{
+    if (!selected_scene_node)
+    {
 
         if(isRunning==false && is_dead == false){
-			is::ISceneNodeAnimator *anim = smgr->createFlyStraightAnimator(node_skeleton->getAbsolutePosition(),core::vector3df(node_sphere->getAbsolutePosition().X,node_skeleton->getAbsolutePosition().Y,node_sphere->getAbsolutePosition().Z),1000);
-			node_skeleton->addAnimator(anim);
-			node_skeleton->setLoopMode(true);
-			node_skeleton->setMD2Animation(is::EMAT_RUN);
+            is::ISceneNodeAnimator *anim = smgr->createFlyStraightAnimator(node_skeleton->getAbsolutePosition(),core::vector3df(node_sphere->getAbsolutePosition().X,node_skeleton->getAbsolutePosition().Y,node_sphere->getAbsolutePosition().Z),1000);
+            node_skeleton->addAnimator(anim);
+            node_skeleton->setLoopMode(true);
+            node_skeleton->setMD2Animation(is::EMAT_RUN);
 
-			isRunning = true;
+            isRunning = true;
 
-		}
+        }
         else if(is_dead){
-			// stopAnimation();
-			isRunning = false;
-		}
-		return true;
+            isRunning = false;
+        }
+        return true;
 
 
-	}
-	else{
-		if(isRunning){
-			stopAnimation();
-			isRunning = false;
-		}
-	}
+    }
+    else{
+        if(isRunning){
+            stopAnimation();
+            isRunning = false;
+        }
+    }
 
-	return false;
+    return false;
 }
 
 void skeleton::stopAnimation(){
-	node_skeleton->removeAnimators();
-	node_skeleton->setLoopMode(false);
-	node_skeleton->setMD2Animation(is::EMAT_STAND);
+    node_skeleton->removeAnimators();
+    node_skeleton->setLoopMode(false);
+    node_skeleton->setMD2Animation(is::EMAT_STAND);
 }
 
 void skeleton::start_dead_animation(){
