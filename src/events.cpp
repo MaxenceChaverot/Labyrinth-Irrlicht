@@ -15,7 +15,7 @@ namespace iv = irr::video;
  * EventReceiver::EventReceiver                                           *
 \**************************************************************************/
 EventReceiver::EventReceiver()
-  : node(nullptr), button_pressed(false), display_map(false), remove_map(false)
+  : node(nullptr), button_pressed(false), display_map(false)
 {
 }
 
@@ -31,12 +31,7 @@ bool EventReceiver::keyboard(const SEvent &event)
     switch (event.KeyInput.Key)
     {
        case KEY_KEY_M:
-        display_map = true; // Display the map when the user click on the key M
-        remove_map = false;
-        break;
-       case KEY_KEY_Q:
-        remove_map = true; // Remove the map when the user click on the key T
-        display_map = false;
+        display_map = !display_map; //the map will be displayed/closed when the user click on the key M
         break;
        case KEY_ESCAPE:
         exit(0);

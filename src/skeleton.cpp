@@ -1,14 +1,21 @@
 #include "skeleton.h"
 #include <iostream>
 
+/**************************************************************************\
+ * skeleton::skeleton : Basic Constructor                                             *
+\**************************************************************************/
 skeleton::skeleton(){
 
 }
 
+/**************************************************************************\
+ * skeleton::skeleton : Constructor Use in scene.cpp                                             *
+\**************************************************************************/
 skeleton::skeleton(IrrlichtDevice *_device, ic::vector3df position, ic::vector3df rotation, int _id):device(_device),id(_id),isRunning(false), is_dead(false), timer_death(false),time(0){
 
     smgr = device->getSceneManager();
     driver = device->getVideoDriver();
+
     // On charge le mesh (fichier .obj)
     is::IAnimatedMesh *mesh_skeleton = smgr->getMesh("data/Models/tris.md2");
 
@@ -22,19 +29,21 @@ skeleton::skeleton(IrrlichtDevice *_device, ic::vector3df position, ic::vector3d
 
 
     // On specifie sa texture
-
     node_skeleton->setMaterialTexture(0, driver->getTexture("data/Textures/red_skeleton_texture.pcx"));
-
-    // On rend le mesh insensible a la lumiere
-    //node_perso->setMaterialFlag(irr::video::EMF_LIGHTING, false);
 
 }
 
+/**************************************************************************\
+ * skeleton::getNode : Getter pour le node de l'ennemi                                      *
+\**************************************************************************/
 is::IAnimatedMeshSceneNode* skeleton::getNode(){
     return node_skeleton;
 }
 
-//Code fourni par Sylvain MIGUELEZ && David BAIO
+/**************************************************************************\
+ * skeleton::faceModelToPlayer : oriente le model face au joueur
+ * Code fourni par Sylvain MIGUELEZ && David BAIO                                      *
+\**************************************************************************/
 void skeleton::faceModelToPlayer(){
 
     // Rotate node to face player
@@ -46,6 +55,10 @@ void skeleton::faceModelToPlayer(){
     node_skeleton->setRotation(rot);
 }
 
+/**************************************************************************\
+ * skeleton::hasPlayerInSight : Calcule si l'ennemi a le joeur en vu
+ * Adapte l'animation en fonction
+\**************************************************************************/
 bool skeleton::hasPlayerInSight(is::ISceneNode *node_sphere){
 
     is::ISceneCollisionManager *collision_manager = smgr->getSceneCollisionManager();
@@ -88,12 +101,18 @@ bool skeleton::hasPlayerInSight(is::ISceneNode *node_sphere){
     return false;
 }
 
+/**************************************************************************\
+ * skeleton::stopAnimation : Arrete les animations du Model                                    *
+\**************************************************************************/
 void skeleton::stopAnimation(){
     node_skeleton->removeAnimators();
     node_skeleton->setLoopMode(false);
     node_skeleton->setMD2Animation(is::EMAT_STAND);
 }
 
+/**************************************************************************\
+ * skeleton::start_dead_animation : Commence l'animation de mort                                      *
+\**************************************************************************/
 void skeleton::start_dead_animation(){
     is_dead=true;
     stopAnimation();
@@ -102,6 +121,9 @@ void skeleton::start_dead_animation(){
     timer_death = true;
 }
 
+/**************************************************************************\
+ * skeleton::check_death_timer : Une fois l'ennemi mort supprime le node associé après un certain temps                                 *
+\**************************************************************************/
 void skeleton::check_death_timer()
 {
     if(timer_death){
@@ -114,4 +136,7 @@ void skeleton::check_death_timer()
     }
 }
 
+/**************************************************************************\
+ * skeleton::getNode : Getter pour la variable is_dead                               *
+\**************************************************************************/
 bool skeleton::isDead(){ return is_dead;}

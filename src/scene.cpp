@@ -25,8 +25,10 @@ myScene::myScene()
       gui(nullptr),
       mesh_scene(nullptr),
       node_scene(nullptr),
-      tps(0)
+      tps(0),
+      is_map_draw(false)
 {
+    //Chargement des postions initiales des ennemis
     vec_ennemi_pos = load_ennemi_pos();
 }
 
@@ -74,6 +76,12 @@ void myScene::scene_init()
 
     time_minute = 60000; // Une minute
     is_finished = false;
+
+    // Creation de l'affichage de la carte
+    iv::ITexture* TextMap = driver->getTexture("screenshot/carte.png");
+    LabMap = gui->addImage(ic::rect<s32>(100,10,600,600));
+    LabMap->setImage(TextMap);
+    LabMap->setVisible(false);
 }
 
 /**************************************************************************\
@@ -109,13 +117,18 @@ void myScene::scene_run()
         check_if_game_is_won();
 
         smgr->drawAll();
-        for(int i = 0; i < vec_ennemy.size(); ++i){
-            if(vec_ennemy[i].isDead ()== false){
 
+        //pour chaque ennemi
+        for(int i = 0; i < vec_ennemy.size(); ++i){
+            //S'il n'est pas mort
+            if(vec_ennemy[i].isDead ()== false){
+                //Orienter l'ennemi face au joueur
                 vec_ennemy[i].faceModelToPlayer();
+                //Gerer les animations et le deplacement si l'ennemi a le joueur en vu
                 vec_ennemy[i].hasPlayerInSight(node_sphere);
 
             }
+            //Timer pour supprimer le node de l'ennemi une fois vaincu
             vec_ennemy[i].check_death_timer();
         }
 
@@ -132,19 +145,19 @@ void myScene::scene_run()
 \**************************************************************************/
 void myScene::display_map()
 {
-    iv::ITexture* TextMap = driver->getTexture("screenshot/carte.png");
-    ig::IGUIImage* LabMap;
 
-    if(receiver.get_display_map() == true)
+
+    if(receiver.get_display_map() == true && !is_map_draw)
     {
         // Affichage de la carte
-        LabMap = gui->addImage(ic::rect<s32>(100,10,600,600));
-        LabMap->setImage(TextMap);
+        LabMap->setVisible(true);
+        is_map_draw = true;
     }
-    if(receiver.get_remove_map() == true)
+    if(receiver.get_display_map() == false && is_map_draw)
     {
-        TextMap->drop();
-        //LabMap->remove();
+        //Desaffichage de la carte
+       LabMap->setVisible(false);
+       is_map_draw = false;
     }
 }
 /**************************************************************************\
@@ -231,9 +244,8 @@ void myScene::game_over()
 \**************************************************************************/
 void myScene::check_if_game_is_won()
 {
-    std::cout<<" X = "<<camera->getPosition().X <<" Y = "<<camera->getPosition().Z<<std::endl;
     // Si le joueur est à la sortie du labyrinthe
-    if(camera->getPosition().X  >= 880   &&   camera->getPosition().X  <= 920    &&  camera->getPosition().Z  >= 880   &&   camera->getPosition().Z  <= 920)
+    if(camera->getPosition().X  >= 900   &&   camera->getPosition().X  <= 990    &&  camera->getPosition().Z  >= -950   &&   camera->getPosition().Z  <= -930)
     {
         gui->addMessageBox(L"CONGRATULATION", L"Congratulations, you managed to find the exit of the labyrinth in less than ten minutes. \n You won the game. \n You have to close the window and relaunch the game to replay");
     }
@@ -242,14 +254,18 @@ void myScene::check_if_game_is_won()
 
 void myScene::load_enemies()
 {
+    //Pour chaque position initiale chargée
     for(int i = 0; i < vec_ennemi_pos.size(); ++i){
+        //Créer un ennemi a la position
         skeleton sk_current = skeleton(device,vec_ennemi_pos[i],ic::vector3df(0, 0, 0),i+1);
 
         is::IAnimatedMeshSceneNode *node_ennemi = sk_current.getNode();
 
+        //Selector pour le node
         is::ITriangleSelector *selector_ennemy = smgr->createTriangleSelector(node_ennemi);
         node_ennemi->setTriangleSelector(selector_ennemy);
 
+        //Colision
         scene::ISceneNodeAnimator *anim;
         anim = smgr->createCollisionResponseAnimator(node_scene->getTriangleSelector(),
                                                      node_ennemi,  // Le noeud que l'on veut gérer
@@ -260,8 +276,6 @@ void myScene::load_enemies()
 
         vec_ennemy.push_back(sk_current);
     }
-
-    //sk1 = vec_ennemy[0];
 }
 
 void myScene::load_camera_gun()
@@ -336,8 +350,6 @@ void myScene::load_camera_gun()
     node_sphere->setPosition(ic::vector3df(0, -5, 10));
     node_gun->setRotation(ic::vector3df(-5, -15, 0));
     node_sphere->setID(6);
-    //node_sphere->setMaterialTexture(driver->getTexture("data/textures/texture_lab"));
-    //node_sphere->setMaterialFlag(irr::video::EMF_LIGHTING, false);
     node_sphere->setVisible(false);
 
 }
@@ -378,9 +390,13 @@ void myScene::gun_shoot()
     }
 }
 
+/**************************************************************************\
+ * myScene::load_ennemi_pos : chargement des positions initiales des ennemis                                          *
+\**************************************************************************/
 std::vector<ic::vector3df> myScene::load_ennemi_pos(){
 
     std::vector<ic::vector3df> vec;
+
     vec.push_back(ic::vector3df(ic::vector3df(-40, 17, 302))); //1
     vec.push_back(ic::vector3df(ic::vector3df(122, 17, 61))); //2
     vec.push_back(ic::vector3df(ic::vector3df(53, 17, -130))); //3
@@ -418,6 +434,4 @@ std::vector<ic::vector3df> myScene::load_ennemi_pos(){
     vec.push_back(ic::vector3df(ic::vector3df(836, 17, -828))); //35
 
     return vec;
-
-
 }

@@ -39,14 +39,18 @@ class myScene
     int time_minute;
     bool is_finished;
 
-    bool is_needed_to_reset;
-
     // Elements du décor
     is::IAnimatedMesh *mesh_scene;
     is::IMeshSceneNode *node_scene;
 
+    //Element pour l'affichage de la carte
+    ig::IGUIImage* LabMap;
+    bool is_map_draw;
+
+    //Camera et Arme du joueur
     is::ICameraSceneNode* camera;
     is::IAnimatedMeshSceneNode *node_gun;
+
     //Sphere invisible entourant l'arme pour detection de colision
     is::IMeshSceneNode *node_sphere;
 
